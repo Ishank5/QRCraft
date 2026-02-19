@@ -193,15 +193,20 @@
   .opt-btn:hover { border-color: #888; }
   .opt-btn.active { border-color: var(--black); background: var(--black); color: var(--white); }
 
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; width: fit-content; max-width: 100%; }
   .toggle-row:last-child { margin-bottom: 0; }
-  .toggle-row label { font-size: 0.86rem; color: var(--mid); flex: 1; padding-right: 12px; }
+  .toggle-row .toggle-label { font-size: 0.84rem; color: var(--mid); white-space: nowrap; }
   .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .toggle-slider { position: absolute; inset: 0; background: #ddd; border-radius: 100px; cursor: pointer; transition: 0.2s; }
   .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
   .toggle input:checked + .toggle-slider { background: var(--black); }
   .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  .ec-row.locked .ec-btn { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .ec-row.locked .ec-btn.active { opacity: 1; }
+  .ec-locked-note { font-size: 0.74rem; color: var(--accent); margin-top: 8px; display: none; font-weight: 500; }
+  .ec-locked-note.show { display: block; }
 
   #gradient-controls { display: none; margin-top: 12px; }
   #gradient-controls.show { display: block; }
@@ -529,8 +534,8 @@
                 </div>
               </div>
               <div class="toggle-row" style="margin-top:14px">
-                <label>Enable Gradient on QR Dots</label>
                 <label class="toggle"><input type="checkbox" id="grad-toggle" onchange="toggleGradient()"><span class="toggle-slider"></span></label>
+                <span class="toggle-label">Enable Gradient on QR Dots</span>
               </div>
               <div id="gradient-controls">
                 <div class="sub-label" style="margin-top:10px">Gradient Colors &amp; Direction</div>
@@ -592,24 +597,25 @@
               </div>
               <div class="field" style="margin-bottom:0">
                 <label>Error Correction Level <span style="font-weight:300;font-size:0.75rem">(set H when adding a logo)</span></label>
-                <div class="ec-row">
+                <div class="ec-row" id="ec-row">
                   <button class="ec-btn" data-ec="L" onclick="selectEC('L')">L<br><span style="font-weight:400;font-size:0.62rem">7%</span></button>
                   <button class="ec-btn active" data-ec="M" onclick="selectEC('M')">M<br><span style="font-weight:400;font-size:0.62rem">15%</span></button>
                   <button class="ec-btn" data-ec="Q" onclick="selectEC('Q')">Q<br><span style="font-weight:400;font-size:0.62rem">25%</span></button>
                   <button class="ec-btn" data-ec="H" onclick="selectEC('H')">H<br><span style="font-weight:400;font-size:0.62rem">30%</span></button>
                 </div>
+                <p class="ec-locked-note" id="ec-locked-note">🔒 Locked to H (High) — required when a logo is present</p>
               </div>
             </div>
 
             <div class="sub-section">
               <div class="sub-label">Options</div>
               <div class="toggle-row">
-                <label>Transparent Background</label>
                 <label class="toggle"><input type="checkbox" id="transparent-bg" onchange="scheduleGenerate()"><span class="toggle-slider"></span></label>
+                <span class="toggle-label">Transparent Background</span>
               </div>
               <div class="toggle-row">
-                <label>Print Mode – High Contrast Black &amp; White</label>
                 <label class="toggle"><input type="checkbox" id="print-mode" onchange="applyPrintMode()"><span class="toggle-slider"></span></label>
+                <span class="toggle-label">Print Mode – High Contrast Black &amp; White</span>
               </div>
             </div>
 
@@ -762,7 +768,7 @@
     <div class="footer-brand">
       <strong>QRCraft</strong>
       <p>A product by <strong>Humble Solutions</strong></p>
-      <p>Contact: <a href="mailto:executives@humblesolutions.in">executives@humblesolutions.in</a></p>
+      <p>Contact: <a href="/cdn-cgi/l/email-protection#680d100d0b1d1c011e0d1b28001d050a040d1b07041d1c0107061b460106"><span class="__cf_email__" data-cfemail="a5c0ddc0c6d0d1ccd3c0d6e5cdd0c8c7c9c0d6cac9d0d1cccacbd68bcccb">[email&#160;protected]</span></a></p>
       <p style="margin-top:10px;font-size:0.75rem;color:#bbb;max-width:320px">Static QR codes — data embedded permanently in the pattern. Works forever without any server or subscription.</p>
     </div>
     <div class="footer-right">
@@ -775,7 +781,7 @@
 
 <div class="toast" id="toast">Done!</div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
 // STATE
 // ============================================================
@@ -829,6 +835,19 @@ function selectCorner(c) {
   document.querySelector(`[data-corner="${c}"]`).classList.add('active');
   scheduleGenerate();
 }
+function lockEC() {
+  currentEC = 'H';
+  document.querySelectorAll('.ec-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-ec="H"]').classList.add('active');
+  document.getElementById('ec-row').classList.add('locked');
+  document.getElementById('ec-locked-note').classList.add('show');
+}
+
+function unlockEC() {
+  document.getElementById('ec-row').classList.remove('locked');
+  document.getElementById('ec-locked-note').classList.remove('show');
+}
+
 function selectEC(ec) {
   currentEC = ec;
   document.querySelectorAll('.ec-btn').forEach(b => b.classList.remove('active'));
@@ -872,6 +891,7 @@ function handleLogoFile(input) {
   const reader = new FileReader();
   reader.onload = e => {
     logoDataURL = e.target.result;
+    lockEC();
     document.getElementById('logo-size-wrap').style.display = 'block';
     document.getElementById('upload-preview').style.display = 'flex';
     document.getElementById('preview-img').src = logoDataURL;
@@ -934,6 +954,7 @@ function selectSocialIcon(btn) {
     img.onload = () => {
       ctx.drawImage(img, 40, 40, 120, 120);
       logoDataURL = canvas.toDataURL('image/png');
+      lockEC();
       document.getElementById('logo-size-wrap').style.display = 'block';
       URL.revokeObjectURL(url);
       scheduleGenerate();
@@ -941,6 +962,7 @@ function selectSocialIcon(btn) {
     img.onerror = () => {
       // Even without icon, use the colored square
       logoDataURL = canvas.toDataURL('image/png');
+      lockEC();
       document.getElementById('logo-size-wrap').style.display = 'block';
       URL.revokeObjectURL(url);
       scheduleGenerate();
@@ -948,6 +970,7 @@ function selectSocialIcon(btn) {
     img.src = url;
   } else {
     logoDataURL = canvas.toDataURL('image/png');
+    lockEC();
     document.getElementById('logo-size-wrap').style.display = 'block';
     scheduleGenerate();
   }
@@ -959,6 +982,7 @@ function clearLogo(regen = true) {
   document.getElementById('logo-size-wrap').style.display = 'none';
   document.getElementById('upload-preview').style.display = 'none';
   document.querySelectorAll('.social-btn').forEach(b => b.classList.remove('active'));
+  unlockEC();
   if (regen) scheduleGenerate();
 }
 
@@ -1188,6 +1212,7 @@ dropZone.addEventListener('drop', e => {
   const reader = new FileReader();
   reader.onload = ev => {
     logoDataURL = ev.target.result;
+    lockEC();
     document.getElementById('logo-size-wrap').style.display = 'block';
     document.getElementById('upload-preview').style.display = 'flex';
     document.getElementById('preview-img').src = logoDataURL;
@@ -1221,12 +1246,4 @@ function makeSample(containerId, dotType, cornerType, dotColor, bgColor, gradien
 
 window.addEventListener('load', () => {
   makeSample('sample-1', 'square',       'square',        '#0a0a0a', '#f8f6f1', null);
-  makeSample('sample-2', 'dots',         'dot',           '#e8491e', '#fff5f0', null);
-  makeSample('sample-3', 'extra-rounded','extra-rounded', '#0a0a0a', '#f8f6f1', {
-    type: 'linear', rotation: 45,
-    colorStops: [{ offset: 0, color: '#e8491e' }, { offset: 1, color: '#f5a623' }]
-  });
-});
-</script>
-</body>
-</html>
+  makeSample('sample-2', 'dots',         'dot',           '
