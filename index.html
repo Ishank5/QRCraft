@@ -629,7 +629,6 @@
             <div class="logo-tabs">
               <button class="logo-tab active" onclick="switchLogoTab('upload',this)">Upload Logo</button>
               <button class="logo-tab" onclick="switchLogoTab('social',this)">Social Icons</button>
-              <button class="logo-tab" onclick="switchLogoTab('none',this)">No Logo</button>
             </div>
 
             <div id="logo-upload" class="logo-tab-content active">
@@ -687,10 +686,8 @@
                   </div>Snapchat
                 </button>
               </div>
-            </div>
-
-            <div id="logo-none" class="logo-tab-content">
-              <p style="font-size:0.84rem;color:#aaa;padding:14px 0">QR code will be generated without a logo.</p>
+              <!-- Remove logo button for social icons tab -->
+              <button class="remove-logo-btn" id="social-remove-btn" onclick="clearLogo()" style="display:none;margin-top:12px;">✕ Remove Logo</button>
             </div>
 
             <div id="logo-size-wrap">
@@ -768,7 +765,6 @@
     <div class="footer-brand">
       <strong>QRCraft</strong>
       <p>A product by <strong>Humble Solutions</strong></p>
-      <p>Contact: <a href="/cdn-cgi/l/email-protection#680d100d0b1d1c011e0d1b28001d050a040d1b07041d1c0107061b460106"><span class="__cf_email__" data-cfemail="a5c0ddc0c6d0d1ccd3c0d6e5cdd0c8c7c9c0d6cac9d0d1cccacbd68bcccb">[email&#160;protected]</span></a></p>
       <p style="margin-top:10px;font-size:0.75rem;color:#bbb;max-width:320px">Static QR codes — data embedded permanently in the pattern. Works forever without any server or subscription.</p>
     </div>
     <div class="footer-right">
@@ -781,7 +777,7 @@
 
 <div class="toast" id="toast">Done!</div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ============================================================
 // STATE
 // ============================================================
@@ -882,7 +878,6 @@ function switchLogoTab(tab, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.logo-tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById(`logo-${tab}`).classList.add('active');
-  if (tab === 'none') clearLogo(false);
 }
 
 function handleLogoFile(input) {
@@ -946,7 +941,6 @@ function selectSocialIcon(btn) {
     const clone = svg.cloneNode(true);
     clone.setAttribute('width', '120');
     clone.setAttribute('height', '120');
-    // Ensure fill/stroke are set appropriately for rendering
     const svgStr = new XMLSerializer().serializeToString(clone);
     const blob   = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
     const url    = URL.createObjectURL(blob);
@@ -956,14 +950,15 @@ function selectSocialIcon(btn) {
       logoDataURL = canvas.toDataURL('image/png');
       lockEC();
       document.getElementById('logo-size-wrap').style.display = 'block';
+      document.getElementById('social-remove-btn').style.display = 'block';
       URL.revokeObjectURL(url);
       scheduleGenerate();
     };
     img.onerror = () => {
-      // Even without icon, use the colored square
       logoDataURL = canvas.toDataURL('image/png');
       lockEC();
       document.getElementById('logo-size-wrap').style.display = 'block';
+      document.getElementById('social-remove-btn').style.display = 'block';
       URL.revokeObjectURL(url);
       scheduleGenerate();
     };
@@ -972,6 +967,7 @@ function selectSocialIcon(btn) {
     logoDataURL = canvas.toDataURL('image/png');
     lockEC();
     document.getElementById('logo-size-wrap').style.display = 'block';
+    document.getElementById('social-remove-btn').style.display = 'block';
     scheduleGenerate();
   }
 }
@@ -981,6 +977,7 @@ function clearLogo(regen = true) {
   document.getElementById('logo-file').value = '';
   document.getElementById('logo-size-wrap').style.display = 'none';
   document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('social-remove-btn').style.display = 'none';
   document.querySelectorAll('.social-btn').forEach(b => b.classList.remove('active'));
   unlockEC();
   if (regen) scheduleGenerate();
@@ -1022,7 +1019,7 @@ function getQRData() {
 }
 
 // ============================================================
-// GENERATE — core function using qr-code-styling properly
+// GENERATE
 // ============================================================
 function scheduleGenerate() {
   clearTimeout(genTimer);
@@ -1127,7 +1124,6 @@ function downloadQR(fmt) {
   const filename   = `qrcraft-${currentType}-${Date.now()}`;
 
   if (fmt === 'svg') {
-    // SVG needs type:'svg'
     const svgOpts = buildOptions(exportSize, exportSize);
     svgOpts.type = 'svg';
     try {
@@ -1138,7 +1134,6 @@ function downloadQR(fmt) {
     return;
   }
 
-  // PNG / JPG: use canvas type
   const pngOpts = buildOptions(exportSize, exportSize);
   try {
     const inst = new QRCodeStyling(pngOpts);
@@ -1146,7 +1141,6 @@ function downloadQR(fmt) {
       inst.download({ name: filename, extension: 'png' });
       toast('✓ PNG downloaded!');
     } else {
-      // JPG: get blob, flatten onto white canvas, re-export
       inst.getRawData('png').then(blob => {
         const url = URL.createObjectURL(blob);
         const img = new Image();
