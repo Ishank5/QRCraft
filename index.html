@@ -1246,4 +1246,12 @@ function makeSample(containerId, dotType, cornerType, dotColor, bgColor, gradien
 
 window.addEventListener('load', () => {
   makeSample('sample-1', 'square',       'square',        '#0a0a0a', '#f8f6f1', null);
-  makeSample('sample-2', 'dots',         'dot',           '
+  makeSample('sample-2', 'dots',         'dot',           '#e8491e', '#fff5f0', null);
+  makeSample('sample-3', 'extra-rounded','extra-rounded', '#0a0a0a', '#f8f6f1', {
+    type: 'linear', rotation: 45,
+    colorStops: [{ offset: 0, color: '#e8491e' }, { offset: 1, color: '#f5a623' }]
+  });
+});
+</script>
+</body>
+</html>
