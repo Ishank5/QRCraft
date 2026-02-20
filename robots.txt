@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qrcraft.humblesolutions.in/sitemap.xml
+
+# Block nothing — full site is indexable
