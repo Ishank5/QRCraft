@@ -964,7 +964,7 @@ function getQRData(){
   switch(currentType){
     case'url':{let v=document.getElementById('url-input').value.trim();if(!v)return'';if(!/^https?:\/\//i.test(v))v='https://'+v;return v;}
     case'whatsapp':{const cc=document.getElementById('wa-cc').value.replace(/[^\d]/g,''),num=document.getElementById('wa-num').value.replace(/[^\d]/g,'');if(!num)return'';const msg=document.getElementById('wa-msg').value.trim();return`https://wa.me/${cc}${num}${msg?'?text='+encodeURIComponent(msg):''}`;}
-    case'phone':{const v=document.getElementById('phone-input').value.trim();return v?`tel:${v}`:'';}
+    case'phone':{const v=document.getElementById('phone-input').value.trim().replace(/\s/g,'');return v?`tel:${v}`:''; }
     case'text':return document.getElementById('text-input').value.trim();
     case'social':{const p=document.getElementById('social-platform').value;let u=document.getElementById('social-user').value.trim().replace(/^@/,'');if(!u)return'';if(/^https?:\/\//i.test(u))return u;return socialURLs[p]+u;}
     case'custom':return document.getElementById('custom-input').value.trim();
